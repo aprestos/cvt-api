@@ -1,19 +1,30 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Model } from 'mongoose';
+import { User } from './entities/user.entity';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+  async create(createUserDto: CreateUserDto) {
+    const createdUser = new this.userModel(createUserDto);
+
+    return createdUser.save();
   }
 
   findAll() {
-    return `This action returns all user`;
+    return this.userModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    await this.userModel.findOne({ userId: id }).exec();
+  }
+
+  async findByEmail(email: string) {
+    return this.userModel.findOne({ email }).exec();
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
