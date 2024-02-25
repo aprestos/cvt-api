@@ -9,7 +9,11 @@ import { AuthModule } from './module/auth/auth.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_CONNECTION_STRING),
+    MongooseModule.forRootAsync({
+      useFactory: () => ({
+        uri: process.env.MONGO_CONNECTION_STRING,
+      }),
+    }),
     UserModule,
     AuthModule,
   ],
