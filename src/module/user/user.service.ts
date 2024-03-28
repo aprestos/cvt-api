@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
-import { User } from './entities/user.entity';
+import { User } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
@@ -12,26 +12,35 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     const createdUser = new this.userModel(createUserDto);
 
-    return createdUser.save();
+    try {
+      return createdUser.save();
+    } catch (error) {
+      console.log(JSON.stringify(error));
+      throw error;
+    }
   }
 
-  findAll() {
+  async findAll() {
     return this.userModel.find().exec();
   }
 
-  async findOne(id: number) {
-    await this.userModel.findOne({ userId: id }).exec();
+  async findOne(id: string) {
+    return this.userModel.findById(id).exec();
   }
 
   async findByEmail(email: string) {
     return this.userModel.findOne({ email }).exec();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    return this.userModel
+      .findByIdAndUpdate(id, updateUserDto, {
+        new: true,
+      })
+      .exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    return this.userModel.findByIdAndDelete(id);
   }
 }

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
-import { User } from './entities/user.entity';
+import { User } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { randomUUID } from 'crypto';
 import { getModelToken } from '@nestjs/mongoose';
@@ -17,13 +17,11 @@ describe('UserService', () => {
 
   const users: User[] = [
     {
-      userId: randomUUID(),
       name: 'albert',
       email: 'albert@wayne.industries',
       password: randomUUID(),
     },
     {
-      userId: randomUUID(),
       name: 'robin',
       email: 'robin@wayne.industries',
       password: randomUUID(),
