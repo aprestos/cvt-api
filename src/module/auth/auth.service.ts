@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   ImATeapotException,
   Injectable,
@@ -25,6 +24,11 @@ export class AuthService {
 
     if (!user) return null;
 
+    if (!user.password)
+      throw new ImATeapotException(
+        'Trying to login but password is not defined',
+      );
+
     const bcrypt = require('bcrypt');
     const isPasswordCorrect = await bcrypt.compare(pass, user.password);
 
@@ -36,24 +40,17 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
+    const payload = { username: user.username, sub: user._id };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
   async signUp(signUpDto: SignUpDto) {
-    if (await this.usersService.findByEmail(signUpDto.email))
-      throw new ConflictException('This is email is already registered');
-
-    const bcrypt = require('bcrypt');
-
-    const hash = await bcrypt.hash(signUpDto.password, 10);
-
     await this.usersService.create({
       email: signUpDto.email,
       name: signUpDto.name,
-      password: hash,
+      password: signUpDto.password,
     });
   }
 }

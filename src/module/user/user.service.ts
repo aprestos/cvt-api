@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
@@ -10,7 +14,17 @@ export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(createUserDto: CreateUserDto) {
-    const createdUser = new this.userModel(createUserDto);
+    if (await this.findByEmail(createUserDto.email))
+      throw new ConflictException('This is email is already registered');
+
+    const createdUser = new this.userModel({
+      email: createUserDto.email,
+      name: createUserDto.name,
+      // if password is defined create an hash
+      ...(createUserDto.password
+        ? { password: await this.createHash(createUserDto.password) }
+        : undefined),
+    });
 
     try {
       return createdUser.save();
@@ -42,5 +56,11 @@ export class UserService {
 
   async remove(id: string) {
     return this.userModel.findByIdAndDelete(id);
+  }
+
+  private async createHash(password: string): Promise<string> {
+    const bcrypt = require('bcrypt');
+
+    return bcrypt.hash(password, 10);
   }
 }
